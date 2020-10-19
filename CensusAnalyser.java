@@ -1,5 +1,7 @@
 package censusanalyser;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 
@@ -18,6 +20,9 @@ public class CensusAnalyser {
 
 	public int loadIndiaCensusData(String csvFilePath) throws CensusAnalyserException, IlleagalStateException {
 		try (Reader reader = Files.newBufferedReader(Paths.get(csvFilePath));) {
+			if(!checkHeader(reader)) 
+				   throw new CensusAnalyserException("Header is not matching", ExceptionType.INCORRECT_HEADER_TYPE);;
+				
 			CsvToBeanBuilder<IndiaCensusCSV> csvToBeanBuilder = new CsvToBeanBuilder<>(reader);
 			csvToBeanBuilder.withType(IndiaCensusCSV.class);
 			csvToBeanBuilder.withIgnoreLeadingWhiteSpace(true);
@@ -33,9 +38,19 @@ public class CensusAnalyser {
 					CensusAnalyserException.ExceptionType.CENSUS_FILE_PROBLEM);
 		} catch (IllegalStateException e) {
 			throw new CensusAnalyserException(e.getMessage(), CensusAnalyserException.ExceptionType.UNABLE_TO_PARSE);
-		} catch (Exception e){
+		} catch (RuntimeException e){
             throw new CensusAnalyserException("there can be delimiter issue in file",CensusAnalyserException.ExceptionType.DELIMITER_ISSUE);
         }
+	}
+    // checking for header correctness
+	private boolean checkHeader(Reader reader) throws IOException {
+		CSVReader csvReader = new CSVReader(reader);
+		String[] nextRecord;
+		nextRecord = csvReader.readNext();
+		boolean result = nextRecord[0].equals("State") && nextRecord[1].equals("Population") && nextRecord[2].equals("AreaInSqKm")
+				&& nextRecord[3].equals("DensityPerSqKm");
+		System.out.println("---------------"+result);
+		return result;
 	}
 
 	public int loadIndiaStateCode(String csvFilePath)throws CensusAnalyserException, IlleagalStateException {
