@@ -8,6 +8,7 @@ import censusanalyser.CensusAnalyserException.ExceptionType;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.stream.StreamSupport;
@@ -25,7 +26,9 @@ public class CensusAnalyser {
 			Iterable<IndiaCensusCSV> csvIterable = () -> censusCSVIterator;
 			int namOfEateries = (int) StreamSupport.stream(csvIterable.spliterator(), false).count();
 			return namOfEateries;
-		} catch (IOException e) {
+		}catch (NoSuchFileException e) {
+            throw new CensusAnalyserException("Please enter correct file", CensusAnalyserException.ExceptionType.INCORRECT_FILE_TYPE);
+        }catch (IOException e) {
 			throw new CensusAnalyserException(e.getMessage(),
 					CensusAnalyserException.ExceptionType.CENSUS_FILE_PROBLEM);
 		} catch (IllegalStateException e) {
